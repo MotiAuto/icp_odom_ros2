@@ -4,9 +4,10 @@ namespace icp_odom_ros2
 {
     IcpOdomROS2::IcpOdomROS2(const rclcpp::NodeOptions& option) : Node("IcpOdomROS2", option)
     {
+        rclcpp::QoS qos_settings = rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
         pc2_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "/pointcloud",
-            rclcpp::SystemDefaultsQoS(),
+            qos_settings,
             std::bind(&IcpOdomROS2::pointcloud_callback, this, _1)
         );
 
