@@ -4,10 +4,9 @@ namespace icp_odom_ros2
 {
     IcpOdomROS2::IcpOdomROS2(const rclcpp::NodeOptions& option) : Node("IcpOdomROS2", option)
     {
-        rclcpp::QoS qos_settings = rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
         pc2_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "/pointcloud",
-            qos_settings,
+            rclcpp::SystemDefaultsQoS(),
             std::bind(&IcpOdomROS2::pointcloud_callback, this, _1)
         );
 
@@ -21,6 +20,8 @@ namespace icp_odom_ros2
 
         this->declare_parameter("frame_id", "camera_link");
         this->get_parameter("frame_id", frame_id_);
+        p.header.frame_id = frame_id_;
+        p.pose.position.z = 0.0;
 
         icp_ = std::make_shared<ICP>();
         get_source_pc_ = false;
@@ -47,9 +48,10 @@ namespace icp_odom_ros2
         }
 
         auto translation = icp_->compute(msg);
+        RCLCPP_INFO(this->get_logger(), "x:%lf, y:%lf, z:%lf", translation.x(), translation.y(), translation.z());
 
         tf2::Quaternion q;
-        if(euler_ = nullptr)
+        if(euler_ == nullptr)
         {
             q.setEuler(0.0, 0.0, 0.0);
         }
@@ -57,18 +59,15 @@ namespace icp_odom_ros2
         {
             q.setEuler(euler_->x, euler_->y, euler_->z);
         }
-
-        geometry_msgs::msg::PoseStamped p;
-        p.header.frame_id = frame_id_;
-        p.pose.position.x = translation.x();
-        p.pose.position.y = translation.y();
-        p.pose.position.z = translation.z();
+        p.pose.position.y = -1.0*translation.x();
+        p.pose.position.x = translation.z();
         p.pose.orientation.w = q.w();
         p.pose.orientation.x = q.x();
         p.pose.orientation.y = q.y();
         p.pose.orientation.z = q.z();
 
         pose_pub_->publish(p);
+        // get_source_pc_ = false;
     }
 }
 

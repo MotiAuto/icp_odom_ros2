@@ -32,6 +32,7 @@ namespace icp_odom_ros2
         std::shared_ptr<ICP> icp_;
         bool get_source_pc_;
         geometry_msgs::msg::Vector3::SharedPtr euler_;
+        geometry_msgs::msg::PoseStamped p;
     };
 }
 

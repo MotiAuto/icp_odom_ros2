@@ -25,6 +25,7 @@ namespace icp_odom_ros2
     tf2::Vector3 ICP::compute(const sensor_msgs::msg::PointCloud2::SharedPtr target)
     {
         pcl::PointCloud<pcl::PointXYZ>::Ptr target_(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::fromROSMsg(*target, *target_);
 
         tf2::Vector3 translation;
         const auto source_size = source_->size();
@@ -57,10 +58,10 @@ namespace icp_odom_ros2
             target_centroid += toTF2Vector(nearest_p);
         }
 
-        source_centroid /= static_cast<float>(source_size);
-        target_centroid /= static_cast<float>(source_size);
+        source_centroid /= source_size;
+        target_centroid /= source_size;
 
-        translation = target_centroid - posture * source_centroid;
+        translation = source_centroid - posture * target_centroid;
 
         return translation;
     }
